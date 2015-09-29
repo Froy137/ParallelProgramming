@@ -16,6 +16,7 @@ static void WriteBMP(const int x, const int y, const unsigned char* const bmp, c
   unsigned char hdr[1078];
   int i, j, c, xcorr, diff;
   FILE* f;
+  
 
   xcorr = (x + 3) >> 2 << 2;  // BMPs have to be a multiple of 4 pixels wide.
   diff = xcorr - x;
@@ -25,6 +26,7 @@ static void WriteBMP(const int x, const int y, const unsigned char* const bmp, c
   *((int*)(&hdr[22])) = y;
   *((int*)(&hdr[34])) = xcorr * y;
   *((int*)(&hdr[2])) = xcorr * y + 1078;
+  
   for (i = 0; i < 256; i++) {
     j = i * 4 + 54;
     hdr[j+0] = i;  // blue
@@ -32,6 +34,7 @@ static void WriteBMP(const int x, const int y, const unsigned char* const bmp, c
     hdr[j+2] = i;  // red
     hdr[j+3] = 0;  // dummy
   }
+  
 
   f = fopen(name, "wb");
   assert(f != NULL);
@@ -54,61 +57,163 @@ static void WriteBMP(const int x, const int y, const unsigned char* const bmp, c
 
 int main(int argc, char *argv[])
 {
-  int row, col, depth, width, maxdepth;
-  double cx, cy, dx, dy, x, y, x2, y2;
-  unsigned char *cnt;
-  struct timeval start, end;
+				  int row, col, depth, width, maxdepth;
+				  double cx, cy, dx, dy, x, y, x2, y2;
+				  unsigned char *cnt;
+				 // struct timeval start, end;
 
-  printf("Fractal v1.3 [serial]\n");
+   				  MPI_Init(NULL, NULL);
+				  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
-  // check command line
-  if (argc != 3) {fprintf(stderr, "usage: %s edge_length max_depth\n", argv[0]); exit(-1);}
-  width = atoi(argv[1]);
-  if (width < 10) {fprintf(stderr, "edge_length must be at least 10\n"); exit(-1);}
-  maxdepth = atoi(argv[2]);
-  if (maxdepth < 10) {fprintf(stderr, "max_depth must be at least 10\n"); exit(-1);}
+				  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-  printf("computing %d by %d fractal with a maximum depth of %d\n", width, width, maxdepth);
+				  
+				  // check command line
+				  if (argc != 3) 
+					{fprintf(stderr, "usage: %s edge_length max_depth\n", argv[0]); exit(-1);}
+					
+				  width = atoi(argv[1]);
+				 
+				  maxdepth = atoi(argv[2]);
 
-  // allocate array
-  cnt = (unsigned char *)malloc(width * width * sizeof(unsigned char));
-  if (cnt == NULL) {fprintf(stderr, "could not allocate memory\n"); exit(-1);}
+				 if (maxdepth < 10) 
+					{fprintf(stderr, "max_depth must be at least 10\n"); exit(-1);}
 
-  // start time
-  gettimeofday(&start, NULL);
+				 
+				 
+				 if(my_rank==0)
+				 {
+						printf("Total number of processes: %d\n",comm_sz);
 
-  // compute fractal
-  dx = (xMax - xMin) / width;
-  dy = (yMax - yMin) / width;
-  for (row = 0; row < width; row++) {
-    cy = yMin + row * dy;
-    for (col = 0; col < width; col++) {
-      cx = xMin + col * dx;
-      x = -cx;
-      y = -cy;
-      depth = maxdepth;
-      do {
-        x2 = x * x;
-        y2 = y * y;
-        y = 2 * x * y - cy;
-        x = x2 - y2 - cx;
-        depth--;
-      } while ((depth > 0) && ((x2 + y2) <= 5.0));
-      cnt[row * width + col] = depth & 255;
-    }
-  }
 
-  // end time
-  gettimeofday(&end, NULL);
-  double runtime = end.tv_sec + end.tv_usec / 1000000.0 - start.tv_sec - start.tv_usec / 1000000.0;
-  printf("compute time: %.4f s\n", runtime);
+						printf("Fractal v1.3 [Parallel]\n");
+						//checking to see that work is evenly distributed
+						if(width%comm_sz!=0)
+						{
+							printf("The number of processes is not equally divisable by width :(" );
+							exit(-1);
+						}
 
-  // verify result by writing it to a file
-  if (width <= 1024) {
-    WriteBMP(width, width, cnt, "fractal.bmp");
-  }
 
-  free(cnt);
-  return 0;
+						if (width < 10) 
+						{fprintf(stderr, "edge_length must be at least 10\n"); exit(-1);}
+
+
+						printf("computing %d by %d fractal with a maximum depth of %d\n", width, width, maxdepth);
+
+						// allocate array
+						cnt = (unsigned char *)malloc(width * width * sizeof(unsigned char));
+						if (cnt == NULL) {fprintf(stderr, "could not allocate memory\n"); exit(-1);}
+
+
+
+			     }// end of Rank 0 duty
+				  
+				  // start time
+				  //gettimeofday(&start, NULL);
+
+				  	 MPI_Barrier(MPI_COMM_WORLD);
+					 start = MPI_Wtime();
+					 
+				  // compute fractal
+				  dx = (xMax - xMin) / width;
+				  dy = (yMax - yMin) / width;
+				  
+				  double start, finish;
+				  
+				  int my_start = my_rank * width / comm_sz;
+				  
+				  int my_end = (my_rank + 1) * width / comm_sz;
+				  
+				  unsigned char segArray[width/comm_sz];
+				  
+
+					 
+				
+				  				  
+				  for (row = my_start; row < my_end ; row++) 
+				  {
+
+					cy = yMin + row * dy;
+					
+					for (col = 0; col < width; col++) 
+					{
+							  cx = xMin + col * dx;
+							  x = -cx;
+							  y = -cy;
+							  depth = maxdepth;
+							  do 
+							  {
+								x2 = x * x;
+								y2 = y * y;
+								y = 2 * x * y - cy;
+								x = x2 - y2 - cx;
+								depth--;
+							  } while ((depth > 0) && ((x2 + y2) <= 5.0));
+							  
+							  segArray[row * width + col] = depth & 255;
+					}
+
+				  }
+				  
+				  MPI_Gather(
+				  &segArray,
+				  width/comm_sz,
+				  MPI_UNSIGNED_CHAR,
+				  cnt,
+				  width/comm_sz,
+				  MPI_UNSIGNED_CHAR,
+				  0,
+				  WORLD_COMM_WORLD);
+				  );
+				  
+				  finish = MPI_Wtime();
+				  /*
+				  for (row = 0; row < width; row++) 
+				  {
+
+					cy = yMin + row * dy;
+					
+					for (col = 0; col < width; col++) 
+					{
+							  cx = xMin + col * dx;
+							  x = -cx;
+							  y = -cy;
+							  depth = maxdepth;
+							  do 
+							  {
+								x2 = x * x;
+								y2 = y * y;
+								y = 2 * x * y - cy;
+								x = x2 - y2 - cx;
+								depth--;
+							  } while ((depth > 0) && ((x2 + y2) <= 5.0));
+							  
+							  cnt[row * width + col] = depth & 255;
+					}
+
+				  }
+					*/
+					if(my_rank==0)
+					{
+
+						// end time
+						//gettimeofday(&end, NULL);
+						//double runtime = end.tv_sec + end.tv_usec / 1000000.0 - start.tv_sec - start.tv_usec / 1000000.0;
+						//printf("compute time: %.4f s\n", runtime);
+
+						// verify result by writing it to a file
+						if (width <= 1024) 
+						{
+						WriteBMP(width, width, cnt, "fractal.bmp");
+						}
+
+					  printf("The elapsed time = %e secondsnn\n", finish-start);
+					}//end of Rank 0 duty
+
+					MPI_Finalize();
+					free(segArray);
+				    free(cnt);
+				  return 0;
 }
 
