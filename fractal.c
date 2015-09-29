@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 				  
 
 					double start, finish;
-
+					int sentinel=0;
 
 				  	 MPI_Barrier(MPI_COMM_WORLD);
 					 start = MPI_Wtime();
@@ -154,6 +154,8 @@ int main(int argc, char *argv[])
 					
 					for (col = 0; col < width; col++) 
 					{
+				
+							  sentinel++;
 							  cx = xMin + col * dx;
 							  x = -cx;
 							  y = -cy;
@@ -167,7 +169,7 @@ int main(int argc, char *argv[])
 								depth--;
 							  } while ((depth > 0) && ((x2 + y2) <= 5.0));
 							  
-							  segArray[col] = depth & 255;
+							  segArray[sentinel] = depth & 255;
 					}
 
 				  }
