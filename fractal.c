@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 				  int my_end = (my_rank + 1) * width / comm_sz;
 				 
 				  unsigned char segArray[(width*width)/comm_sz];
-				  //unsigned char segArray [((width * width * sizeof(unsigned char))/comm_sz)];
+				  //unsigned char * segArray= ((width * width/comm_sz )* sizeof(unsigned char));
 
 
 				
@@ -254,9 +254,10 @@ int main(int argc, char *argv[])
 				
 
 					}//end of Rank 0 duty
-					else{
-						free(segArray);
-						}
+					
+
+				//MPI_Barrier(MPI_COMM_WORLD);
+				//free(segArray);
 					MPI_Finalize();
 
                                   //        free(segArray);
