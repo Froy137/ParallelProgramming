@@ -108,11 +108,8 @@ int main(int argc, char *argv[])
 					if (width < 10) 
 					{fprintf(stderr, "edge_length must be at least 10\n"); exit(-1);}
 
-					printf("Here before\n");
 					printf("computing %d by %d fractal with a maximum depth of %d\n", width, width, maxdepth);
-					printf("Here 1\n");
-
-
+					
 					// allocate array
 					cnt = (unsigned char *)malloc(width * width * sizeof(unsigned char));
 					if (cnt == NULL) {fprintf(stderr, "could not allocate memory\n"); exit(-1);}
