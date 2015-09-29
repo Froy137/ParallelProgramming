@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 				  
 				  int my_end = (my_rank + 1) * width / comm_sz;
 				 
-				  unsigned char segArray[width*width/comm_sz];
+				  unsigned char segArray[(width*width)/comm_sz];
 				  //unsigned char segArray [((width * width * sizeof(unsigned char))/comm_sz)];
 
 
@@ -175,10 +175,10 @@ int main(int argc, char *argv[])
 //				if(my_rank==0) {
 				  MPI_Gather(
 				  &segArray,
-				  width/comm_sz,
+				  (width*width)/comm_sz,
 				  MPI_UNSIGNED_CHAR,
 				  cnt,
-				  width/comm_sz,
+				  (width*width)/comm_sz,
 				  MPI_UNSIGNED_CHAR,
 				  0,
 				  MPI_COMM_WORLD);
@@ -249,12 +249,14 @@ int main(int argc, char *argv[])
 						}
 
 					  printf("The elapsed time = %e secondsnn\n", finish-start);
-//                                          free(segArray);
-//                                          free(cnt);
+                                  //        free(segArray);
+                                          free(cnt);
 				
 
 					}//end of Rank 0 duty
-
+					else{
+						free(segArray);
+						}
 					MPI_Finalize();
 
                                   //        free(segArray);
