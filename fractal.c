@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <mpi.h>
 
 #define delta 0.00578
 #define xMin 0.74395
@@ -57,32 +58,44 @@ static void WriteBMP(const int x, const int y, const unsigned char* const bmp, c
 
 int main(int argc, char *argv[])
 {
+
+				int comm_sz,my_rank;
+
+                                  MPI_Init(NULL, NULL);
+                                  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+                                  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+					MPI_Barrier(MPI_COMM_WORLD);
+
 				  int row, col, depth, width, maxdepth;
 				  double cx, cy, dx, dy, x, y, x2, y2;
-				  unsigned char *cnt;
 				 // struct timeval start, end;
-
-   				  MPI_Init(NULL, NULL);
-				  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
-
-				  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+				  unsigned char *cnt;
 
 				  
-				  // check command line
-				  if (argc != 3) 
-					{fprintf(stderr, "usage: %s edge_length max_depth\n", argv[0]); exit(-1);}
 					
 				  width = atoi(argv[1]);
 				 
 				  maxdepth = atoi(argv[2]);
 
-				 if (maxdepth < 10) 
-					{fprintf(stderr, "max_depth must be at least 10\n"); exit(-1);}
-
-				 
-				 
+					MPI_Barrier(MPI_COMM_WORLD);				 
 				 if(my_rank==0)
 				 {
+				
+
+
+
+
+				// check command line
+
+                                  if (argc != 3)
+                                        {fprintf(stderr, "usage: %s edge_length max_depth\n", argv[0]); exit(-1);}
+			
+
+                                 if (maxdepth < 10)
+                                        {fprintf(stderr, "max_depth must be at least 10\n"); exit(-1);}
+
 						printf("Total number of processes: %d\n",comm_sz);
 
 
@@ -98,19 +111,24 @@ int main(int argc, char *argv[])
 						if (width < 10) 
 						{fprintf(stderr, "edge_length must be at least 10\n"); exit(-1);}
 
-
+						printf("Here before\n");
 						printf("computing %d by %d fractal with a maximum depth of %d\n", width, width, maxdepth);
+						printf("Here 1\n");
+
 
 						// allocate array
+
 						cnt = (unsigned char *)malloc(width * width * sizeof(unsigned char));
+
 						if (cnt == NULL) {fprintf(stderr, "could not allocate memory\n"); exit(-1);}
 
 
 
 			     }// end of Rank 0 duty
 				  
-				  // start time
-				  //gettimeofday(&start, NULL);
+
+					double start, finish;
+
 
 				  	 MPI_Barrier(MPI_COMM_WORLD);
 					 start = MPI_Wtime();
@@ -119,16 +137,14 @@ int main(int argc, char *argv[])
 				  dx = (xMax - xMin) / width;
 				  dy = (yMax - yMin) / width;
 				  
-				  double start, finish;
-				  
-				  int my_start = my_rank * width / comm_sz;
+				  int my_start = my_rank * (width / comm_sz);
 				  
 				  int my_end = (my_rank + 1) * width / comm_sz;
-				  
-				  unsigned char segArray[width/comm_sz];
-				  
+				 
+				  unsigned char segArray[width*width/comm_sz];
+				  //unsigned char segArray [((width * width * sizeof(unsigned char))/comm_sz)];
 
-					 
+
 				
 				  				  
 				  for (row = my_start; row < my_end ; row++) 
@@ -151,11 +167,12 @@ int main(int argc, char *argv[])
 								depth--;
 							  } while ((depth > 0) && ((x2 + y2) <= 5.0));
 							  
-							  segArray[row * width + col] = depth & 255;
+							  segArray[col] = depth & 255;
 					}
 
 				  }
-				  
+	 
+//				if(my_rank==0) {
 				  MPI_Gather(
 				  &segArray,
 				  width/comm_sz,
@@ -164,10 +181,28 @@ int main(int argc, char *argv[])
 				  width/comm_sz,
 				  MPI_UNSIGNED_CHAR,
 				  0,
-				  WORLD_COMM_WORLD);
-				  );
-				  
+				  MPI_COMM_WORLD);
+//				  }
+//				  else{
+/*
+                                  MPI_Gather(
+                                  &segArray,
+                                  width/comm_sz,
+                                  MPI_UNSIGNED_CHAR,
+                                  NULL,
+                                  width/comm_sz,
+                                  MPI_UNSIGNED_CHAR,
+                                  0,
+                                  MPI_COMM_WORLD);
+
+					}				  
+*/
 				  finish = MPI_Wtime();
+
+
+
+
+
 				  /*
 				  for (row = 0; row < width; row++) 
 				  {
@@ -194,6 +229,11 @@ int main(int argc, char *argv[])
 
 				  }
 					*/
+
+
+
+
+
 					if(my_rank==0)
 					{
 
@@ -209,11 +249,17 @@ int main(int argc, char *argv[])
 						}
 
 					  printf("The elapsed time = %e secondsnn\n", finish-start);
+//                                          free(segArray);
+//                                          free(cnt);
+				
+
 					}//end of Rank 0 duty
 
 					MPI_Finalize();
-					free(segArray);
-				    free(cnt);
+
+                                  //        free(segArray);
+                                  //        free(cnt);
+
 				  return 0;
 }
 
