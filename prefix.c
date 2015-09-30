@@ -41,8 +41,17 @@ int main(int argc, char* argv[])
     
 if(my_rank==0){    
     
-            printf("Prefix Sum v1.0 [serial]\n");
+            printf("Prefix Sum v1.0 [Parallel]\n");
 
+					printf("Total number of processes: %d\n",comm_sz);
+					
+					//checking to see that work is evenly distributed
+					if(width%comm_sz!=0)
+					{
+					 printf("The number of processes is not equally divisable by width :(\n" );
+					 exit(-1);
+					}
+			
           // check command line
           if (argc != 2) {fprintf(stderr, "usage: %s size\n", argv[0]); exit(-1);}
           if (size < 1) {fprintf(stderr, "size is too small: %d\n", size); exit(-1);}
@@ -94,7 +103,7 @@ if(my_rank==0){
 	
     int scan_last_elements2[comm_sz];//creating the array that holds the sum scan elements
     
-    int local_lastValue = local_array[(size/comm_sz)-1];
+    int local_lastValue = local_array[(size/comm_sz)];
     
     
     arr_last_elements[my_rank]=local_lastValue;//fill in array with chunks last value.
