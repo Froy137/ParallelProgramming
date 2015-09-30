@@ -36,8 +36,9 @@ int main(int argc, char* argv[])
 
 				MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    
-    
+  int size = atoi(argv[1]);
+ int* arrayA ;
+int* arrayB ;    
     
 if(my_rank==0){    
     
@@ -45,13 +46,12 @@ if(my_rank==0){
 
           // check command line
           if (argc != 2) {fprintf(stderr, "usage: %s size\n", argv[0]); exit(-1);}
-          int size = atoi(argv[1]);
           if (size < 1) {fprintf(stderr, "size is too small: %d\n", size); exit(-1);}
           printf("configuration: %d elements\n", size);
 
           // allocate arrays
-          int* arrayA = (int*)malloc(sizeof(int) * size);  if (arrayA == NULL) {fprintf(stderr, "cannot allocate arrayA\n");  exit(-1);}
-          int* arrayB = (int*)malloc(sizeof(int) * size);  if (arrayB == NULL) {fprintf(stderr, "cannot allocate arrayB\n");  exit(-1);}
+           arrayA = (int*)malloc(sizeof(int) * size);  if (arrayA == NULL) {fprintf(stderr, "cannot allocate arrayA\n");  exit(-1);}
+           arrayB = (int*)malloc(sizeof(int) * size);  if (arrayB == NULL) {fprintf(stderr, "cannot allocate arrayB\n");  exit(-1);}
 
           // initialize
           for (int i = 0; i < size; i++) {
@@ -77,7 +77,7 @@ if(my_rank==0){
     //int local_conCat[size/comm_sz];//will hold finalized partition
 	
     MPI_Scatter(
-    ArrayB,
+    arrayB,
     size/comm_sz,
     MPI_INT,
     local_array,
@@ -91,14 +91,14 @@ if(my_rank==0){
 	int local_lastValue = local_array[size/comm_sz];
 	int future_num;
 	
-	if(my_rank!=comm_sz){
+	if(my_rank!=comm_sz-1){
 		//everybody sends last value to the rank above them.
 		MPI_Send(&local_lastValue,1,MPI_INT,my_rank + 1,0,MPI_COMM_WORLD);
 	}
 	
 	if(my_rank!=0){
 		//everybody receive the last num of the rank below them.
-		MPI_Receive(&future_num,1,MPI_INT,my_rank-1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(&future_num,1,MPI_INT,my_rank-1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		//and Reduce(add) the value you just received 
 		//MPI_Reduce(&local_array,&local_conCat,size/comm_sz,MPI_INT,MPI_SUM,my_rank,MPI_COMM_WORLD);
 
