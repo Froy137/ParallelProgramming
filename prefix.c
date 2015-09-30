@@ -144,7 +144,7 @@ if(my_rank==0){
           // compare results
           prefixSumA(arrayA, size);
           for (int i = 0; i < size; i++) {
-            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n  Number mismatch A:%d  B%d\n", i,arrayA[i],arrayB[i]);  exit(-1);}
+            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n  Number mismatch A:%d  B%d\n    previous A:%d  B%d\n  ", i,arrayA[i],arrayB[i],arrayA[i-1],arrayB[i-1]);  exit(-1);}
           }
 
           free(arrayA);  free(arrayB);
