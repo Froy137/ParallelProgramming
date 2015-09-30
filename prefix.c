@@ -103,29 +103,25 @@ if(my_rank==0){
     
     int arr_last_elements[comm_sz];//creating the array that holds the last elements of chunks
 	
-    int scan_last_elements[comm_sz];//creating the array that holds the sum scan elements
-	
-    int scan_last_elements2[comm_sz];//creating the array that holds the sum scan elements
+    int scaned_last_elements[comm_sz];//creating the array that holds the sum scan elements
     
     int local_lastValue = local_array[(size/comm_sz)-1];
+    int local_proc_presum;
+    
+    MPI_Scan(&local_lastValue,&local_proc_presum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);//prefix sum on the last elements of chunks
     
     
-    arr_last_elements[my_rank]=local_lastValue;//fill in array with chunks last value.
+    scaned_last_elements[my_rank]=local_proc_presum-local_lastValue;
     
-    MPI_Scan(arr_last_elements,scan_last_elements,comm_sz,MPI_INT,MPI_SUM,MPI_COMM_WORLD);//prefix sum on the last elements of chunks
-    
-    scan_last_elements2[my_rank]= scan_last_elements[my_rank]-local_lastValue;
-    
-    
-        for(int x=0;x<size/comm_sz;x++){
+        for(int x=0;x<(size/comm_sz);x++){
         
-            local_array[x]=local_array[x]+scan_last_elements2[my_rank];
+            local_array[x]=local_array[x]+scaned_last_elements[my_rank];
         
         }
     
 
         MPI_Gather(
-        &local_array2,
+        &local_array,
         size/comm_sz,
         MPI_INT,
         arrayB,
@@ -144,7 +140,7 @@ if(my_rank==0){
           // compare results
           prefixSumA(arrayA, size);
           for (int i = 0; i < size; i++) {
-            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n  Number mismatch A:%d  B%d\n    previous A:%d  B%d\n  ", i,arrayA[i],arrayB[i],arrayA[i-1],arrayB[i-1]);  exit(-1);}
+            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n  Number mismatch A:%d  B:%d\nprevious A:%d  B:%d\nnext A:%d B:%d\n  ", i,arrayA[i],arrayB[i],arrayA[i-1],arrayB[i-1],arrayA[i+1],arrayB[i+1]);  exit(-1);}
           }
 
           free(arrayA);  free(arrayB);
