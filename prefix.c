@@ -107,7 +107,7 @@ if(my_rank==0){
 	
     int scan_last_elements2[comm_sz];//creating the array that holds the sum scan elements
     
-    int local_lastValue = local_array[(size/comm_sz)];
+    int local_lastValue = local_array[(size/comm_sz)-1];
     
     
     arr_last_elements[my_rank]=local_lastValue;//fill in array with chunks last value.
