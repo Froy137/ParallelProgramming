@@ -73,7 +73,7 @@ if(my_rank==0){
                  start = MPI_Wtime();
     
     int local_array[size/comm_sz];//local prefix sum
-    
+    int local_array2[size/comm_sz];//local prefix sum
     //int local_conCat[size/comm_sz];//will hold finalized partition
     
     MPI_Scatter(
@@ -90,7 +90,7 @@ if(my_rank==0){
     
     int arr_last_elements[comm_sz];//creating the array that holds the elements of chunks
     int scan_last_elements[comm_sz];//creating the array that holds the sum scan elements
-    
+    int scan_last_elements2[comm_sz];//creating the array that holds the sum scan elements
     
     int local_lastValue = local_array[size/comm_sz];
     
@@ -99,41 +99,18 @@ if(my_rank==0){
     
     MPI_Scan(arr_last_elements,scan_last_elements,comm_sz,MPI_INT,MPI_SUM,MPI_COMM_WORLD);//prefix sum on the last elements of chunks
     
-    scan_last_elements[my_rank]-= local_lastValue;
+    scan_last_elements2[my_rank]= scan_last_elements[my_rank]-local_lastValue;
     
     
         for(int x=0;x<size/comm_sz;x++){
         
-            local_array[x]=local_array[x]+scan_last_elements[my_rank];
+            local_array2[x]=local_array[x]+scan_last_elements2[my_rank];
         
         }
     
-    
-    
-    /*
-    int future_num;
-    
-    if(my_rank!=comm_sz-1){
-        //everybody sends last value to the rank above them.
-        MPI_Send(&local_lastValue,1,MPI_INT,my_rank + 1,0,MPI_COMM_WORLD);
-    }
-    
-    if(my_rank!=0){
-        //everybody receive the last num of the rank below them.
-        MPI_Recv(&future_num,1,MPI_INT,my_rank-1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        //and Reduce(add) the value you just received 
-        //MPI_Reduce(&local_array,&local_conCat,size/comm_sz,MPI_INT,MPI_SUM,my_rank,MPI_COMM_WORLD);
-
-        for(int x=0;x<size/comm_sz;x++){
-        
-            local_array[x]=local_array[x]+future_num;
-        
-        }
-    }
-*/
 
         MPI_Gather(
-        &local_array,
+        &local_array2,
         size/comm_sz,
         MPI_INT,
         arrayB,
