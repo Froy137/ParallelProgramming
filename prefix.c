@@ -33,9 +33,11 @@ int main(int argc, char* argv[])
 
                 MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+
                 int size = atoi(argv[1]);
                 int* arrayA ;
                 int* arrayB ;    
+
     
 if(my_rank==0){    
     
@@ -140,6 +142,7 @@ if(my_rank==0){
         0,
         MPI_COMM_WORLD);
     
+
      finish = MPI_Wtime();
     
     if(my_rank==0){
