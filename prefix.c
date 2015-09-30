@@ -45,18 +45,22 @@ if(my_rank==0){
 
 					printf("Total number of processes: %d\n",comm_sz);
 					
-					//checking to see that work is evenly distributed
-					if(width%comm_sz!=0)
-					{
-					 printf("The number of processes is not equally divisable by width :(\n" );
-					 exit(-1);
-					}
-			
+
           // check command line
           if (argc != 2) {fprintf(stderr, "usage: %s size\n", argv[0]); exit(-1);}
           if (size < 1) {fprintf(stderr, "size is too small: %d\n", size); exit(-1);}
           printf("configuration: %d elements\n", size);
 
+		  
+					//checking to see that work is evenly distributed
+					if(size%comm_sz!=0)
+					{
+					 printf("The number of processes is not equally divisable by width :(\n" );
+					 exit(-1);
+					}
+			
+		  
+		  
           // allocate arrays
            arrayA = (int*)malloc(sizeof(int) * size);  if (arrayA == NULL) {fprintf(stderr, "cannot allocate arrayA\n");  exit(-1);}
            arrayB = (int*)malloc(sizeof(int) * size);  if (arrayB == NULL) {fprintf(stderr, "cannot allocate arrayB\n");  exit(-1);}
