@@ -88,11 +88,13 @@ if(my_rank==0){
     
     prefixSumB(local_array, size/comm_sz);
     
-    int arr_last_elements[comm_sz];//creating the array that holds the elements of chunks
+    int arr_last_elements[comm_sz];//creating the array that holds the last elements of chunks
+	
     int scan_last_elements[comm_sz];//creating the array that holds the sum scan elements
+	
     int scan_last_elements2[comm_sz];//creating the array that holds the sum scan elements
     
-    int local_lastValue = local_array[size/comm_sz];
+    int local_lastValue = local_array[(size/comm_sz)-1];
     
     
     arr_last_elements[my_rank]=local_lastValue;//fill in array with chunks last value.
@@ -104,7 +106,7 @@ if(my_rank==0){
     
         for(int x=0;x<size/comm_sz;x++){
         
-            local_array2[x]=local_array[x]+scan_last_elements2[my_rank];
+            local_array[x]=local_array[x]+scan_last_elements2[my_rank];
         
         }
     
@@ -129,7 +131,7 @@ if(my_rank==0){
           // compare results
           prefixSumA(arrayA, size);
           for (int i = 0; i < size; i++) {
-            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n", i);  exit(-1);}
+            if (arrayA[i] != arrayB[i]) {fprintf(stderr, "result mismatch at position %d\n  Number mismatch A:%d  B%d\n", i,arrayA[i],arrayB[i]);  exit(-1);}
           }
 
           free(arrayA);  free(arrayB);
