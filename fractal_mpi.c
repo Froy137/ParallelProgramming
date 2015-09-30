@@ -66,21 +66,18 @@ int main(int argc, char *argv[])
 
 				MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-				MPI_Barrier(MPI_COMM_WORLD);
-
+				
 				int row, col, depth, width, maxdepth;
 				double cx, cy, dx, dy, x, y, x2, y2;
 				// struct timeval start, end;
 				unsigned char *cnt;
 
 
-
 				width = atoi(argv[1]);
 
 				maxdepth = atoi(argv[2]);
 
-				MPI_Barrier(MPI_COMM_WORLD);
-
+				
 				 if(my_rank==0)
 				 {
 				
